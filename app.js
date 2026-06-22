@@ -25,6 +25,31 @@ const safeStore = {
   }
 };
 
+const DEVICE_MODE_KEY = "sophies-ocean-device-mode";
+const DEVICE_MODES = {
+  pc: {
+    id: "pc",
+    icon: "💻",
+    title: "PC version",
+    label: "PC",
+    description: "Use the keyboard arrows to swim and Space or Enter to start the animal questions."
+  },
+  touch: {
+    id: "touch",
+    icon: "📱",
+    title: "Cellphone / Tablet version",
+    label: "Cellphone / Tablet",
+    description: "Use big on-screen buttons: up, down, left, right, Action, and Listen."
+  }
+};
+
+function defaultDeviceMode() {
+  const saved = safeStore.get(DEVICE_MODE_KEY);
+  if (DEVICE_MODES[saved]) return saved;
+  const looksTouch = window.matchMedia?.("(pointer: coarse)")?.matches || window.innerWidth <= 900;
+  return looksTouch ? "touch" : "pc";
+}
+
 const VOICE_PROFILE = {
   rate: 0.72,
   pitch: 1.03,
@@ -441,6 +466,7 @@ const app = {
   root: $("#app"),
   screen: "menu",
   mode: "practice",
+  deviceMode: defaultDeviceMode(),
   player: { x: 50, y: 50 },
   progress: loadProgress(),
   currentAnimal: ANIMALS[0],
@@ -467,6 +493,8 @@ const app = {
   fullscreenAccepted: false,
   answerBusy: false,
   init() {
+    this.setupResponsiveViewport();
+    this.applyDeviceMode();
     this.refreshVoices();
     if (window.speechSynthesis?.addEventListener) {
       window.speechSynthesis.addEventListener("voiceschanged", () => this.refreshVoices());
@@ -475,6 +503,19 @@ const app = {
     this.renderMenu();
     this.bindGlobalKeys();
     this.syncFullscreenLock();
+  },
+  setupResponsiveViewport() {
+    const updateViewport = () => {
+      const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+      const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
+      document.documentElement.style.setProperty("--real-vh", `${vh * 0.01}px`);
+      document.documentElement.style.setProperty("--real-vw", `${vw * 0.01}px`);
+      document.body.dataset.orientation = vw > vh ? "landscape" : "portrait";
+      document.body.dataset.viewportSize = vw <= 380 ? "tiny" : vw <= 520 ? "phone" : vw <= 900 ? "tablet" : "desktop";
+    };
+    updateViewport();
+    window.addEventListener("resize", updateViewport, { passive: true });
+    window.addEventListener("orientationchange", () => setTimeout(updateViewport, 160), { passive: true });
   },
   refreshVoices() {
     this.voices = window.speechSynthesis?.getVoices?.() || [];
@@ -617,8 +658,53 @@ const app = {
     localStorage.setItem("sophies-ocean-adventure-progress", JSON.stringify(this.progress));
   },
   render(html) {
+    this.applyDeviceMode();
     this.root.innerHTML = html;
     this.syncFullscreenLock();
+  },
+  applyDeviceMode() {
+    document.body.dataset.deviceMode = this.deviceMode;
+  },
+  setDeviceMode(mode) {
+    if (!DEVICE_MODES[mode]) return;
+    this.deviceMode = mode;
+    safeStore.set(DEVICE_MODE_KEY, mode);
+    this.applyDeviceMode();
+    this.renderDevicePickerIfOpen();
+  },
+  deviceModeLabel() {
+    return DEVICE_MODES[this.deviceMode]?.label || DEVICE_MODES.pc.label;
+  },
+  renderDevicePickerIfOpen() {
+    const grid = $("#deviceModeGrid");
+    if (!grid) return;
+    grid.innerHTML = Object.values(DEVICE_MODES).map(mode => `
+      <button class="device-card ${mode.id === this.deviceMode ? "selected" : ""}" data-device-mode="${mode.id}" type="button" aria-pressed="${mode.id === this.deviceMode}">
+        <span class="device-icon">${mode.icon}</span>
+        <strong>${mode.title}</strong>
+        <small>${mode.description}</small>
+      </button>
+    `).join("");
+    const note = $("#deviceModeNote");
+    if (note) {
+      note.textContent = this.deviceMode === "touch"
+        ? "Selected: Cellphone / Tablet. The ocean map will show movement buttons."
+        : "Selected: PC. The ocean map will use keyboard arrows.";
+    }
+  },
+  bindDevicePicker() {
+    const grid = $("#deviceModeGrid");
+    if (!grid) return;
+    this.renderDevicePickerIfOpen();
+    grid.addEventListener("click", (event) => {
+      const card = event.target.closest("[data-device-mode]");
+      if (!card) return;
+      this.setDeviceMode(card.dataset.deviceMode);
+      const message = this.deviceMode === "touch"
+        ? "Cellphone and tablet version selected. Use the big arrows to swim."
+        : "PC version selected. Use the keyboard arrows to swim.";
+      this.speak(message);
+    });
   },
   commonTopbar(title = "") {
     return `
@@ -632,6 +718,7 @@ const app = {
         </div>
         <div class="badges">
           ${title ? `<span class="badge">${title}</span>` : ""}
+          <span class="badge device-badge">${DEVICE_MODES[this.deviceMode]?.icon || "💻"} ${this.deviceModeLabel()}</span>
           <button class="btn small" data-action="repeat">🔊 Listen</button>
           <button class="btn small" data-action="fullscreen">⛶ Full Screen</button>
           <button class="btn small" data-screen="menu">🏠 Home</button>
@@ -753,6 +840,11 @@ const app = {
               <span class="feature-pill">Full screen play</span>
               <span class="feature-pill">Practice + Exam</span>
             </div>
+            <div class="device-panel">
+              <label>Choose how Sophie will play before starting:</label>
+              <div id="deviceModeGrid" class="device-mode-grid" aria-label="Device version selection"></div>
+              <small id="deviceModeNote"></small>
+            </div>
             <div class="voice-panel">
               <label>Choose a sweet little voice avatar:</label>
               <div id="voiceAvatarGrid" class="voice-avatar-grid" aria-label="Voice avatar selection"></div>
@@ -765,12 +857,13 @@ const app = {
               <button class="btn coral" data-screen="treasure">🎁 Treasure Room</button>
             </div>
             <p class="story fullscreen-note">
-              This game plays in full screen. On a computer, use the arrow keys. On a phone or iPad, use the on-screen arrows.
+              This game plays in full screen. Choose PC for keyboard arrows, or Cellphone / Tablet for on-screen movement buttons.
             </p>
           </div>
         </div>
       </section>
     `);
+    this.bindDevicePicker();
     this.bindVoicePicker();
     $$('[data-start]').forEach(btn => btn.addEventListener("click", () => this.startMode(btn.dataset.start)));
     $('[data-screen="treasure"]').addEventListener("click", async () => {
@@ -902,6 +995,7 @@ const app = {
           <div class="player" id="player" style="left:${this.player.x}%;top:${this.player.y}%">👧</div>
           <div class="map-help">
             <div class="bubble-panel" id="nearestText">Move near an animal to begin.</div>
+            <div class="bubble-panel device-help">${this.deviceMode === "touch" ? "Use ⬆️⬇️⬅️➡️ + Action" : "Use keyboard arrows + Space/Enter"}</div>
             <div class="bubble-panel">${completed}/${animals.length} animals completed in this ocean.</div>
           </div>
         </div>
@@ -924,7 +1018,7 @@ const app = {
         <button class="down" data-dir="down" aria-label="Down">⬇️</button>
         <button class="right" data-dir="right" aria-label="Right">➡️</button>
       </div>
-      <div class="action-pad">
+      <div class="action-pad" aria-label="Touch action controls">
         <button data-touch-action="interact">⭐<br>Action</button>
         <button data-touch-action="help">🔊<br>Listen</button>
       </div>
@@ -938,7 +1032,7 @@ const app = {
       ["pointerup", "pointerleave", "pointercancel"].forEach(type => btn.addEventListener(type, () => clearInterval(interval)));
     });
     $$('[data-touch-action="interact"]').forEach(btn => btn.addEventListener("click", () => this.interactNearest()));
-    $$('[data-touch-action="help"]').forEach(btn => btn.addEventListener("click", () => this.speak("Use the arrows to swim to an animal. Then press Action.")));
+    $$('[data-touch-action="help"]').forEach(btn => btn.addEventListener("click", () => this.speak(this.deviceMode === "touch" ? "Use the big arrow buttons to swim to an animal. Then press Action." : "Use the keyboard arrows to swim to an animal. Then press Space or Enter.")));
   },
   movePlayer(dir) {
     if (this.screen !== "map") return;
@@ -972,7 +1066,7 @@ const app = {
     if (text) {
       text.innerHTML = this.completedOceanAnimals[animal.id]
         ? `${animal.emoji} ${animal.name} is done. Swim to another animal.`
-        : distance < 13 ? `${animal.emoji} ${animal.name} is ready. Sophie is close!` : `Move near a sea animal to begin.`;
+        : distance < 13 ? `${animal.emoji} ${animal.name} is ready. Sophie is close!` : (this.deviceMode === "touch" ? `Use the big arrows to move near a sea animal.` : `Use the keyboard arrows to move near a sea animal.`);
     }
     if (distance < 10 && !this.completedOceanAnimals[animal.id] && !this.autoOpenLock) {
       this.autoOpenLock = true;

@@ -204,3 +204,17 @@ LICENSE
 ```
 
 Upload all files directly to the root of your GitHub repository and enable GitHub Pages from the `main` branch, `/root`.
+
+## PC / Cellphone / Tablet selection
+
+Before starting Practice or Exam, the main menu now asks how Sophie will play:
+
+- **PC version**: keyboard arrows move Sophie; Space or Enter starts the animal questions.
+- **Cellphone / Tablet version**: the ocean map shows large on-screen movement buttons: up, down, left, right, plus Action and Listen.
+
+The selected version is saved in the browser with `localStorage`, so the next time the game opens it remembers the preferred control mode.
+
+
+### Mobile/tablet responsiveness
+
+The Cellphone / Tablet version now uses the real viewport size of the device, `100dvh`/safe-area insets, orientation detection, and responsive `clamp()` sizes. This lets the ocean map, player, animal buttons, top bar, and movement controls scale to phone and tablet screens, including portrait and landscape mode.

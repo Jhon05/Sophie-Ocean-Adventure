@@ -1197,3 +1197,270 @@ select.mode-select {
 .exam-sea {
   background: radial-gradient(circle at top, rgba(255,255,255,.15), transparent 30%), linear-gradient(180deg, #8ee1ff 0%, #3aa6de 36%, #17539e 100%);
 }
+
+/* Explicit PC vs Cellphone/Tablet adaptation selected from the main menu. */
+.device-panel {
+  margin: 12px 0 8px;
+  padding: 12px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.74);
+  border: 3px solid rgba(255,225,119,.52);
+  display: grid;
+  gap: 8px;
+  box-shadow: 0 10px 22px rgba(0,90,120,.12);
+}
+.device-panel label {
+  font-weight: 900;
+}
+.device-panel small {
+  font-weight: 900;
+  color: #0e5873;
+  line-height: 1.25;
+}
+.device-mode-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(160px, 1fr));
+  gap: 10px;
+}
+.device-card {
+  border: 3px solid rgba(24,214,211,.38);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff, #eafffd);
+  color: var(--deep);
+  min-height: 96px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 3px 10px;
+  padding: 10px;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 8px 18px rgba(0,90,120,.12);
+}
+.device-card:hover,
+.device-card:focus {
+  outline: none;
+  border-color: #ffe177;
+  box-shadow: 0 0 0 4px rgba(255,255,255,.75), 0 0 18px rgba(255,225,119,.6);
+}
+.device-card.selected {
+  border-color: #ffe177;
+  background: linear-gradient(180deg, #fff9d7, #eafffd);
+  box-shadow: 0 0 0 5px rgba(255,255,255,.75), 0 0 22px rgba(255,225,119,.65);
+}
+.device-icon {
+  grid-row: 1 / span 2;
+  font-size: 34px;
+  line-height: 1;
+}
+.device-card small {
+  font-size: 12px;
+  line-height: 1.18;
+  color: #0e5873;
+}
+.device-badge {
+  background: rgba(255,249,215,.9);
+}
+body[data-device-mode="pc"] .touch-controls,
+body[data-device-mode="pc"] .action-pad {
+  display: none !important;
+}
+body[data-device-mode="touch"] .touch-controls {
+  display: grid !important;
+}
+body[data-device-mode="touch"] .action-pad {
+  display: flex !important;
+}
+body[data-device-mode="touch"] .map-help {
+  bottom: calc(104px + var(--safe-bottom));
+}
+body[data-device-mode="pc"] .map-help {
+  bottom: 16px;
+}
+body[data-device-mode="touch"] .game-area {
+  height: min(72dvh, 640px);
+}
+.menu-card {
+  overflow: auto;
+}
+
+@media (max-height: 760px) {
+  .device-panel {
+    padding: 9px;
+    gap: 5px;
+  }
+  .device-card {
+    min-height: 74px;
+    padding: 8px;
+  }
+  .device-card small,
+  .device-panel small {
+    display: none;
+  }
+  .device-icon {
+    font-size: 26px;
+  }
+}
+@media (max-width: 860px) {
+  .device-mode-grid {
+    grid-template-columns: 1fr;
+  }
+  .device-card {
+    min-height: 76px;
+  }
+}
+@media (max-width: 520px) {
+  .touch-controls {
+    grid-template-columns: 56px 56px 56px;
+    grid-template-rows: 56px 56px;
+    gap: 7px;
+  }
+  .touch-controls button {
+    border-radius: 18px;
+    font-size: 23px;
+  }
+  .action-pad button {
+    min-width: 68px;
+    min-height: 56px;
+    font-size: 15px;
+  }
+  body[data-device-mode="touch"] .map-help {
+    bottom: calc(96px + var(--safe-bottom));
+  }
+}
+
+/* Extra responsive layer for real cellphone/tablet screens and changing browser bars. */
+:root {
+  --real-vh: 1dvh;
+  --real-vw: 1vw;
+  --touch-btn: clamp(48px, 13.5vw, 68px);
+  --action-btn-w: clamp(62px, 18vw, 86px);
+  --panel-pad: clamp(8px, 2.4vw, 16px);
+}
+
+html, body, #app {
+  min-height: calc(var(--real-vh) * 100);
+}
+
+body[data-device-mode="touch"] .screen {
+  padding-left: max(10px, env(safe-area-inset-left, 0px));
+  padding-right: max(10px, env(safe-area-inset-right, 0px));
+}
+
+body[data-device-mode="touch"] .topbar {
+  gap: 8px;
+}
+
+body[data-device-mode="touch"] .badge,
+body[data-device-mode="touch"] .btn.small {
+  padding: clamp(6px, 1.8vw, 10px) clamp(8px, 2.3vw, 12px);
+  font-size: clamp(12px, 3.2vw, 15px);
+}
+
+body[data-device-mode="touch"] .game-area {
+  width: min(100%, 1180px);
+  height: min(calc(var(--real-vh) * 67), 640px);
+  min-height: min(420px, calc(var(--real-vh) * 58));
+  border-width: clamp(3px, 1.3vw, 6px);
+}
+
+body[data-device-mode="touch"] .zone {
+  min-width: clamp(82px, 25vw, 118px);
+  padding: clamp(6px, 1.8vw, 9px) clamp(7px, 2.2vw, 12px);
+  border-radius: clamp(18px, 5vw, 28px);
+  font-size: clamp(11px, 3.1vw, 15px);
+}
+
+body[data-device-mode="touch"] .zone .emoji {
+  font-size: clamp(24px, 8vw, 34px);
+}
+
+body[data-device-mode="touch"] .zone-thumb {
+  max-width: clamp(42px, 13vw, 64px);
+  max-height: clamp(42px, 13vw, 64px);
+}
+
+body[data-device-mode="touch"] .player {
+  width: clamp(44px, 13vw, 58px);
+  height: clamp(44px, 13vw, 58px);
+  font-size: clamp(22px, 7vw, 30px);
+  border-width: clamp(3px, 1.2vw, 5px);
+}
+
+body[data-device-mode="touch"] .touch-controls {
+  grid-template-columns: repeat(3, var(--touch-btn));
+  grid-template-rows: repeat(2, var(--touch-btn));
+  left: max(10px, env(safe-area-inset-left, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+
+body[data-device-mode="touch"] .touch-controls button {
+  border-radius: clamp(14px, 4vw, 20px);
+  font-size: clamp(21px, 6.5vw, 28px);
+}
+
+body[data-device-mode="touch"] .action-pad {
+  right: max(10px, env(safe-area-inset-right, 0px));
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+}
+
+body[data-device-mode="touch"] .action-pad button {
+  min-width: var(--action-btn-w);
+  min-height: var(--touch-btn);
+  font-size: clamp(12px, 3.6vw, 17px);
+}
+
+body[data-device-mode="touch"] .map-help {
+  left: max(10px, env(safe-area-inset-left, 0px));
+  right: max(10px, env(safe-area-inset-right, 0px));
+  bottom: calc(var(--touch-btn) * 2 + 24px + env(safe-area-inset-bottom, 0px));
+  gap: 6px;
+}
+
+body[data-device-mode="touch"] .bubble-panel {
+  padding: clamp(6px, 1.7vw, 10px) clamp(8px, 2.4vw, 14px);
+  border-radius: clamp(16px, 4vw, 24px);
+  font-size: clamp(11px, 3.1vw, 15px);
+}
+
+body[data-device-mode="touch"][data-viewport-size="tiny"] .map-help .bubble-panel:nth-child(3),
+body[data-device-mode="touch"][data-viewport-size="phone"] .map-help .bubble-panel:nth-child(3) {
+  display: none;
+}
+
+body[data-device-mode="touch"][data-orientation="landscape"] .screen {
+  justify-content: flex-start;
+  padding-top: max(6px, env(safe-area-inset-top, 0px));
+}
+
+body[data-device-mode="touch"][data-orientation="landscape"] .topbar {
+  margin-bottom: 6px;
+}
+
+body[data-device-mode="touch"][data-orientation="landscape"] .game-area {
+  height: min(calc(var(--real-vh) * 74), 540px);
+  min-height: min(300px, calc(var(--real-vh) * 66));
+}
+
+body[data-device-mode="touch"][data-orientation="landscape"] .map-help {
+  bottom: calc(var(--touch-btn) + 16px + env(safe-area-inset-bottom, 0px));
+}
+
+body[data-device-mode="touch"][data-orientation="landscape"] .touch-controls {
+  grid-template-columns: repeat(3, clamp(42px, 8vw, 58px));
+  grid-template-rows: repeat(2, clamp(42px, 8vw, 58px));
+}
+
+body[data-device-mode="touch"][data-orientation="landscape"] .action-pad button {
+  min-width: clamp(58px, 10vw, 78px);
+  min-height: clamp(42px, 8vw, 58px);
+}
+
+body[data-device-mode="touch"][data-viewport-size="tiny"] .device-card small,
+body[data-device-mode="touch"][data-viewport-size="tiny"] .feature-list,
+body[data-device-mode="touch"][data-viewport-size="tiny"] .story.fullscreen-note {
+  display: none;
+}
